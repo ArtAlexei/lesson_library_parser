@@ -57,6 +57,7 @@ for book_id in range(1, 11):
     soup = BeautifulSoup(response.text, 'lxml')
     book_header = soup.find('h1').text.replace(u'\xa0', u'').split('::')
     book_name = book_header[0].strip()
+    print(book_name)
     book_author = book_header[1].strip()
 
     url = f'https://tululu.org/txt.php?id={book_id}'
@@ -68,3 +69,9 @@ for book_id in range(1, 11):
     image_url = soup.find('div', class_='bookimage').find('img')['src']
     image_url = urljoin('https://tululu.org/', image_url)
     download_image(image_url)
+
+    comments = soup.find_all('div', class_='texts')
+    for comment in comments:
+        print(comment.find('span').text)
+    print('')
+

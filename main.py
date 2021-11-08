@@ -71,7 +71,11 @@ for book_id in range(1, 11):
     download_image(image_url)
 
     comments = soup.find_all('div', class_='texts')
-    for comment in comments:
-        print(comment.find('span').text)
-    print('')
+    #for comment in comments:
+    #    print(comment.find('span').text)
 
+    books_genre = soup.find('span', class_='d_book').find_all('a')
+    for genre in books_genre:
+        print(genre.text)
+
+    print('')

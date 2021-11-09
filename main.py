@@ -1,8 +1,9 @@
 import os
+from urllib.parse import urljoin, urlsplit
+
 import requests
 from bs4 import BeautifulSoup
 from pathvalidate import sanitize_filename
-from urllib.parse import urljoin,urlparse,urlsplit
 
 
 def check_for_redirect(response):
@@ -31,10 +32,10 @@ def download_txt(url, file_name, folder='books/'):
         my_file.write(response.text)
     return file_path
 
+
 def download_image(url, folder='images/'):
-    if "nopic" in image_url: return
     os.makedirs(folder, exist_ok=True)
-    file_name= urlsplit(url).path.split('/')[-1]
+    file_name = urlsplit(url).path.split('/')[-1]
     response = requests.get(url)
     response.raise_for_status()
     file_path = os.path.join(folder, file_name)
@@ -43,10 +44,24 @@ def download_image(url, folder='images/'):
     return file_path
 
 
+def parse_book_page(html):
+    soup = BeautifulSoup(html, 'lxml')
+    header = soup.find('h1').text.replace(u'\xa0', u'').split('::')
+    name = header[0].strip()
+    author = header[1].strip()
+    image_url = soup.find('div', class_='bookimage').find('img')['src']
+    comments = soup.find_all('div', class_='texts')
+    genres = soup.find('span', class_='d_book').find_all('a')
+    book = {"name": name,
+            "author": author,
+            "image_url": image_url,
+            "comments": comments,
+            "genres": genres}
+    return book
 
 
 for book_id in range(1, 11):
-
+    # parsing
     url = f'https://tululu.org/b{book_id}/'
     response = requests.get(url)
     response.raise_for_status()
@@ -54,28 +69,19 @@ for book_id in range(1, 11):
         check_for_redirect(response)
     except requests.HTTPError:
         continue
-    soup = BeautifulSoup(response.text, 'lxml')
-    book_header = soup.find('h1').text.replace(u'\xa0', u'').split('::')
-    book_name = book_header[0].strip()
-    print(book_name)
-    book_author = book_header[1].strip()
+    book = parse_book_page(response.text)
 
+    # download text
     url = f'https://tululu.org/txt.php?id={book_id}'
     try:
-        download_txt(url, f'{book_id}.{book_name}')
+        download_txt(url, f'{book_id}.{book["name"]}')
     except requests.HTTPError:
         continue
 
-    image_url = soup.find('div', class_='bookimage').find('img')['src']
-    image_url = urljoin('https://tululu.org/', image_url)
-    download_image(image_url)
+    download_image(urljoin('https://tululu.org/', book["image_url"]))
 
-    comments = soup.find_all('div', class_='texts')
-    #for comment in comments:
-    #    print(comment.find('span').text)
-
-    books_genre = soup.find('span', class_='d_book').find_all('a')
-    for genre in books_genre:
+    print(book['name'])
+    for genre in book['genres']:
         print(genre.text)
 
     print('')

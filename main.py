@@ -1,3 +1,4 @@
+import argparse
 import os
 from urllib.parse import urljoin, urlsplit
 
@@ -13,16 +14,7 @@ def check_for_redirect(response):
 
 
 def download_txt(url, file_name, folder='books/'):
-    """Функция для скачивания текстовых файлов.
-    Args:
-        url (str): Cсылка на текст, который хочется скачать.
-        file_name (str): Имя файла, с которым сохранять.
-        folder (str): Папка, куда сохранять.
-    Returns:
-        str: Путь до файла, куда сохранён текст.
-    """
     os.makedirs(folder, exist_ok=True)
-
     response = requests.get(url)
     response.raise_for_status()
     check_for_redirect(response)
@@ -60,28 +52,36 @@ def parse_book_page(html):
     return book
 
 
-for book_id in range(1, 11):
-    # parsing
-    url = f'https://tululu.org/b{book_id}/'
-    response = requests.get(url)
-    response.raise_for_status()
-    try:
-        check_for_redirect(response)
-    except requests.HTTPError:
-        continue
-    book = parse_book_page(response.text)
+def main():
+    parser = argparse.ArgumentParser(description='Download books from tululu.org')
+    parser.add_argument('--start_id', default=1, type=int)
+    parser.add_argument('--end_id', default=10, type=int)
+    args = parser.parse_args()
+    for book_id in range(args.start_id, args.end_id):
+        # parsing
+        url = f'https://tululu.org/b{book_id}/'
+        response = requests.get(url)
+        response.raise_for_status()
+        try:
+            check_for_redirect(response)
+        except requests.HTTPError:
+            continue
+        book = parse_book_page(response.text)
 
-    # download text
-    url = f'https://tululu.org/txt.php?id={book_id}'
-    try:
-        download_txt(url, f'{book_id}.{book["name"]}')
-    except requests.HTTPError:
-        continue
+        # download
+        url = f'https://tululu.org/txt.php?id={book_id}'
+        try:
+            download_txt(url, f'{book_id}.{book["name"]}')
+        except requests.HTTPError:
+            continue
+        download_image(urljoin('https://tululu.org/', book["image_url"]))
 
-    download_image(urljoin('https://tululu.org/', book["image_url"]))
+        # print
+        print(book['name'])
+        for genre in book['genres']:
+            print(genre.text)
+        print('')
 
-    print(book['name'])
-    for genre in book['genres']:
-        print(genre.text)
 
-    print('')
+if __name__ == "__main__":
+    main()

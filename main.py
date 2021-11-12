@@ -12,15 +12,15 @@ def check_for_redirect(response):
         raise requests.HTTPError
 
 
-def download_txt(url, file_name, folder='books/'):
+def download_txt(url, params, file_name, folder='books/'):
     os.makedirs(folder, exist_ok=True)
-    response = requests.get(url)
+    response = requests.get(url, params)
     response.raise_for_status()
     check_for_redirect(response)
     file_name = sanitize_filename(file_name)
     file_path = f"{os.path.join(folder, file_name)}.txt"
-    with open(file_path, "w", encoding='UTF-8') as my_file:
-        my_file.write(response.text)
+    with open(file_path, "w", encoding='UTF-8') as file:
+        file.write(response.text)
     return file_path
 
 
@@ -30,19 +30,22 @@ def download_image(url, folder='images/'):
     response = requests.get(url)
     response.raise_for_status()
     file_path = os.path.join(folder, file_name)
-    with open(file_path, "wb") as my_file:
-        my_file.write(response.content)
+    with open(file_path, "wb") as file:
+        file.write(response.content)
     return file_path
 
 
 def parse_book_page(html):
     soup = BeautifulSoup(html, 'lxml')
     header = soup.find('h1').text.replace(u'\xa0', u'').split('::')
-    name = header[0].strip()
-    author = header[1].strip()
+    header = [i.strip() for i in header]
+    name, author = header
     image_url = soup.find('div', class_='bookimage').find('img')['src']
     comments = soup.find_all('div', class_='texts')
+    comments = [comment.text for comment in comments]
     genres = soup.find('span', class_='d_book').find_all('a')
+    genres=[genre.text for genre in genres]
+
     book = {"name": name,
             "author": author,
             "image_url": image_url,
@@ -63,15 +66,19 @@ def main():
             response.raise_for_status()
             check_for_redirect(response)
             book = parse_book_page(response.text)
-            url = f'https://tululu.org/txt.php?id={book_id}'
-            download_txt(url, f'{book_id}.{book["name"]}')
-            download_image(urljoin('https://tululu.org/', book["image_url"]))
+
+            url = 'https://tululu.org/txt.php'
+            params = {'id': book_id}
+            download_txt(url, params, f'{book_id}.{book["name"]}')
+
+            url = urljoin('https://tululu.org/', book["image_url"])
+            download_image(url)
         except requests.HTTPError:
             continue
 
         print(book['name'])
         for genre in book['genres']:
-            print(genre.text)
+            print(genre)
         print('')
 
 

@@ -58,7 +58,6 @@ def main():
     parser.add_argument('--end_id', default=10, type=int)
     args = parser.parse_args()
     for book_id in range(args.start_id, args.end_id):
-        # parsing
         url = f'https://tululu.org/b{book_id}/'
         response = requests.get(url)
         response.raise_for_status()
@@ -68,7 +67,6 @@ def main():
             continue
         book = parse_book_page(response.text)
 
-        # download
         url = f'https://tululu.org/txt.php?id={book_id}'
         try:
             download_txt(url, f'{book_id}.{book["name"]}')
@@ -76,7 +74,6 @@ def main():
             continue
         download_image(urljoin('https://tululu.org/', book["image_url"]))
 
-        # print
         print(book['name'])
         for genre in book['genres']:
             print(genre.text)

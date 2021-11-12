@@ -10,7 +10,6 @@ from pathvalidate import sanitize_filename
 def check_for_redirect(response):
     if response.history:
         raise requests.HTTPError
-    return
 
 
 def download_txt(url, file_name, folder='books/'):
@@ -63,16 +62,12 @@ def main():
         try:
             response.raise_for_status()
             check_for_redirect(response)
-        except requests.HTTPError:
-            continue
-        book = parse_book_page(response.text)
-
-        url = f'https://tululu.org/txt.php?id={book_id}'
-        try:
+            book = parse_book_page(response.text)
+            url = f'https://tululu.org/txt.php?id={book_id}'
             download_txt(url, f'{book_id}.{book["name"]}')
+            download_image(urljoin('https://tululu.org/', book["image_url"]))
         except requests.HTTPError:
             continue
-        download_image(urljoin('https://tululu.org/', book["image_url"]))
 
         print(book['name'])
         for genre in book['genres']:

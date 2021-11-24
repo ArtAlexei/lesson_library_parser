@@ -7,14 +7,15 @@ from bs4 import BeautifulSoup
 from main import download_image, download_txt, parse_book_page, check_for_redirect
 
 books = []
-for page in range(1, 2):
+for page in range(1, 5):
     url = f'https://tululu.org/l55/{page}/'
     response = requests.get(url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
-    books_from_page = soup.find_all("table", class_="d_book")
+
+    books_from_page=soup.select('.d_book')
     for book in books_from_page:
-        href = book.find('a').get('href')
+        href = book.select_one('a').get('href')
         book_id = href[2:-1]
         url = urljoin('https://tululu.org/', href)
         response = requests.get(url)

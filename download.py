@@ -47,9 +47,9 @@ def parse_book_page(html):
     return book
 
 
-def total_pages():
+def get_number_of_pages():
     url = f'https://tululu.org/l55/1/'
     response = requests.get(url)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, 'lxml')
-    return soup.select('.npage')[-1].text
+    return soup.select_one('.npage:last-child').text

@@ -47,7 +47,7 @@ def parse_book_page(html):
     return book
 
 
-def get_number_of_pages():
+def get_pages_number():
     url = f'https://tululu.org/l55/1/'
     response = requests.get(url)
     response.raise_for_status()

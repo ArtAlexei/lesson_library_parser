@@ -6,14 +6,14 @@ from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
 
-from download import download_image, download_txt, parse_book_page, check_for_redirect, get_number_of_pages
+from download import download_image, download_txt, parse_book_page, check_for_redirect, get_pages_number
 
 
 def main():
     books = []
     parser = argparse.ArgumentParser(description='Download books from tululu.org')
     parser.add_argument('--start_page', default=1, type=int)
-    parser.add_argument('--end_page', default=get_number_of_pages(), type=int)
+    parser.add_argument('--end_page', default=get_pages_number(), type=int)
     parser.add_argument('--dest_folder', default=os.getcwd(), type=str,
                         help='path to the directory with parsing results')
     parser.add_argument('--skip_imgs', action='store_true', help='do not download images')
